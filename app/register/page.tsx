@@ -25,6 +25,7 @@ export default function KioskRegistration() {
     hostName: "",
     purpose: "",
     duration: "1",
+    cardPhoto: "",
   });
 
   const handleChange = (
@@ -42,6 +43,7 @@ export default function KioskRegistration() {
         ...prev,
         fullName: data.fullName,
         idCardNumber: data.idCardNumber,
+        cardPhoto: data.photo || "",
       }));
     } catch (error) {
       console.error("Failed to read ID card", error);
@@ -61,7 +63,7 @@ export default function KioskRegistration() {
         setTimeout(() => {
           setSubmitted(false);
           setStep(1);
-          setFormData({ fullName: "", idCardNumber: "", phone: "", hostName: "", purpose: "", duration: "1" });
+          setFormData({ fullName: "", idCardNumber: "", phone: "", hostName: "", purpose: "", duration: "1", cardPhoto: "" });
         }, 5000);
       } else {
         setIsSubmitting(false);

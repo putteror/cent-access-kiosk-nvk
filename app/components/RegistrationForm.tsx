@@ -45,12 +45,24 @@ export default function RegistrationForm({
           disabled={isReadingCard}
           className="w-full relative overflow-hidden group flex items-center gap-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border border-blue-200/50 p-4 rounded-[1.25rem] hover:border-blue-300 hover:shadow-md transition-all duration-300 disabled:opacity-70 disabled:cursor-wait"
         >
-          <div className="p-3 bg-blue-600 rounded-xl shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform flex-shrink-0">
-            <Scan size={24} className="text-white" />
+          <div className="p-3 bg-blue-600 rounded-xl shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform flex-shrink-0 overflow-hidden relative">
+            {formData.cardPhoto ? (
+              <img 
+                src={`data:image/jpeg;base64,${formData.cardPhoto}`} 
+                alt="ID Card" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <Scan size={24} className="text-white" />
+            )}
           </div>
           <div className="text-left flex-1 min-w-0">
-            <p className="font-bold text-blue-900 text-[15px] truncate">อ่านข้อมูลจากบัตรประชาชน (Auto-fill)</p>
-            <p className="text-blue-700/80 text-xs mt-0.5 font-medium truncate">ทดสอบคลิกเพื่อดึงข้อมูลชื่อ-สกุล และเลขบัตรรวดเร็วทันใจ</p>
+            <p className="font-bold text-blue-900 text-[15px] truncate">
+              {formData.cardPhoto ? "อ่านข้อมูลสำเร็จ" : "อ่านข้อมูลจากบัตรประชาชน (Auto-fill)"}
+            </p>
+            <p className="text-blue-700/80 text-xs mt-0.5 font-medium truncate">
+              {formData.cardPhoto ? `พบข้อมูลคุณ ${formData.fullName}` : "ทดสอบคลิกเพื่อดึงข้อมูลชื่อ-สกุล และเลขบัตรรวดเร็วทันใจ"}
+            </p>
           </div>
           {isReadingCard ? (
             <div className="flex gap-1.5 px-4">
@@ -60,7 +72,7 @@ export default function RegistrationForm({
             </div>
           ) : (
             <div className="bg-white border border-blue-100 text-blue-700 font-bold px-4 py-2 rounded-xl text-xs shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              ทดสอบอ่านบัตร
+              {formData.cardPhoto ? "อ่านใหม่" : "ทดสอบอ่านบัตร"}
             </div>
           )}
         </button>

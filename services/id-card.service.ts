@@ -1,6 +1,10 @@
 export interface IdCardData {
   fullName: string;
+  fullNameEn?: string;
   idCardNumber: string;
+  birthDate?: string;
+  gender?: string;
+  photo?: string; // base64
 }
 
 // 📌 API Endpoint สำหรับเครื่องอ่านบัตรประชาชนตัวเครื่อง
@@ -24,12 +28,21 @@ export const fetchIdCardData = async (): Promise<IdCardData> => {
       throw new Error(`Failed to read ID Card (status: ${response.status})`);
     }
 
-    const data = await response.json();
+    const json = await response.json();
+    const data = json.data; // เข้าถึงฟิลด์ data ตามรูปแบบใหม่
     
-    // คาดหวังรูปแบบข้อมูลที่คืนมาจากตัวอ่านบัตร (สามารถแก้ไข Mapping ให้ตรงกับ Service จริง)
+    if (!data) {
+      throw new Error("ไม่พบข้อมูลใน Response (data is null)");
+    }
+
+    // Mapping ข้อมูลจากรูปแบบใหม่
     return {
-      fullName: data.fullName || data.name || "ไม่พบชื่อภาษาไทย",
-      idCardNumber: data.idCardNumber || data.cid || "ไม่พบหมายเลขบัตร",
+      fullName: data.FullNameTH || "ไม่พบชื่อภาษาไทย",
+      fullNameEn: data.FullNameEN,
+      idCardNumber: data.CitizenID || "ไม่พบหมายเลขบัตร",
+      birthDate: data.BirthDate,
+      gender: data.Gender,
+      photo: data.Photo,
     };
   } catch (error) {
     console.error("[ID Card Error] fetchIdCardData failed:", error);
@@ -39,7 +52,11 @@ export const fetchIdCardData = async (): Promise<IdCardData> => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     return {
       fullName: "นาย สมชาย เยี่ยมยอด",
-      idCardNumber: "1234567890123"
+      fullNameEn: "Mr. Somchai Yeamyod",
+      idCardNumber: "1234567890123",
+      birthDate: "25330101",
+      gender: "1",
+      photo: ""
     };
   }
 };
