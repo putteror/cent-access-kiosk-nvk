@@ -75,9 +75,9 @@ export default function RegistrationForm({
         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
             {/* Photo Section */}
-            <div className="md:col-span-4 lg:col-span-3">
+            <div className="md:col-span-3 lg:col-span-2">
               <label className={LABEL_CLASS}>รูปถ่ายหน้าบัตร</label>
-              <div className="aspect-[3/4] rounded-2xl overflow-hidden border-2 border-zinc-100 bg-zinc-50 shadow-inner relative group">
+              <div className="aspect-[3/4] w-full max-w-[140px] mx-auto md:mx-0 rounded-2xl overflow-hidden border-2 border-zinc-100 bg-zinc-50 shadow-inner relative group">
                 {formData.cardPhoto ? (
                   <img 
                     src={`data:image/jpeg;base64,${formData.cardPhoto}`} 
@@ -86,7 +86,7 @@ export default function RegistrationForm({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                    <User size={64} />
+                    <User size={48} />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -94,7 +94,7 @@ export default function RegistrationForm({
             </div>
 
             {/* Information Section */}
-            <div className="md:col-span-8 lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <div className="md:col-span-9 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                {/* Title */}
                <div className="md:col-span-2 lg:col-span-1">
                 <label className={LABEL_CLASS}>คำนำหน้า <span className="text-red-400 font-bold">*</span></label>
