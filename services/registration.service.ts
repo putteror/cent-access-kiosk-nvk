@@ -4,11 +4,12 @@ import Hex from 'crypto-js/enc-hex';
 export interface RegistrationPayload {
   fullName: string;
   idCardNumber: string;
-  phone: string;
-  hostName: string;
-  purpose: string;
-  duration: string;
+  phone?: string;
+  hostName?: string;
+  purpose?: string;
+  duration?: string;
   photoBase64: string | null;
+  cardPhoto?: string;
 }
 
 export interface RegistrationResponse {
@@ -65,15 +66,21 @@ export const registerVisitor = async (payload: RegistrationPayload): Promise<Reg
         { inputType: "TEXT", key: "FIRST_NAME", label: "First Name", answer: firstName },
         { inputType: "TEXT", key: "LAST_NAME", label: "Last Name", answer: lastName },
         { inputType: "TEXT", key: "PERSON_CODE", label: "ID Card Number", answer: payload.idCardNumber },
-        { inputType: "TEXT", key: "MOBILE_NUMBER", label: "Phone Number", answer: payload.phone },
-        { inputType: "TEXT", key: "CONTACT_PERSON", label: "Contact Person", answer: payload.hostName },
-        { inputType: "TEXT", key: "VISIT_PURPOSE", label: "Visit Purpose", answer: payload.purpose },
-        { inputType: "TEXT", key: "DURATION", label: "Duration", answer: payload.duration },
+        { inputType: "TEXT", key: "MOBILE_NUMBER", label: "Phone Number", answer: payload.phone || "-" },
+        { inputType: "TEXT", key: "CONTACT_PERSON", label: "Contact Person", answer: payload.hostName || "-" },
+        { inputType: "TEXT", key: "VISIT_PURPOSE", label: "Visit Purpose", answer: payload.purpose || "-" },
+        { inputType: "TEXT", key: "DURATION", label: "Duration", answer: payload.duration || "1" },
         ...(payload.photoBase64 ? [{
           inputType: "IMAGE",
           key: "FACE_IMAGE",
           label: "Face Image",
           answer: payload.photoBase64,
+        }] : []),
+        ...(payload.cardPhoto ? [{
+          inputType: "IMAGE",
+          key: "CARD_IMAGE",
+          label: "ID Card Photo",
+          answer: payload.cardPhoto,
         }] : [])
       ],
       status: "PENDING" // หรือสถานะที่ Backend คาดหวัง

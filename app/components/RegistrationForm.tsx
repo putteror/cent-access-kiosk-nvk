@@ -30,134 +30,143 @@ export default function RegistrationForm({
     onNext();
   };
 
+  const hasCardData = !!formData.idCardNumber;
+
   return (
     <div className="flex-1 flex flex-col px-8 lg:px-12 pt-7 pb-6 min-h-0 overflow-hidden">
-      <div className="flex-shrink-0 mb-5">
-        <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">ลงทะเบียนผู้มาติดต่อ</h1>
-        <p className="text-zinc-500 text-sm mt-1">กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการถ่ายภาพ</p>
-      </div>
-
-      {/* ID Card Auto-Fill Button */}
-      <div className="flex-shrink-0 mb-6">
-        <button
-          type="button"
-          onClick={onSimulateReadCard}
-          disabled={isReadingCard}
-          className="w-full relative overflow-hidden group flex items-center gap-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border border-blue-200/50 p-4 rounded-[1.25rem] hover:border-blue-300 hover:shadow-md transition-all duration-300 disabled:opacity-70 disabled:cursor-wait"
-        >
-          <div className="p-3 bg-blue-600 rounded-xl shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform flex-shrink-0 overflow-hidden relative">
-            {formData.cardPhoto ? (
-              <img 
-                src={`data:image/jpeg;base64,${formData.cardPhoto}`} 
-                alt="ID Card" 
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <Scan size={24} className="text-white" />
-            )}
-          </div>
-          <div className="text-left flex-1 min-w-0">
-            <p className="font-bold text-blue-900 text-[15px] truncate">
-              {formData.cardPhoto ? "อ่านข้อมูลสำเร็จ" : "อ่านข้อมูลจากบัตรประชาชน (Auto-fill)"}
-            </p>
-            <p className="text-blue-700/80 text-xs mt-0.5 font-medium truncate">
-              {formData.cardPhoto ? `พบข้อมูลคุณ ${formData.fullName}` : "ทดสอบคลิกเพื่อดึงข้อมูลชื่อ-สกุล และเลขบัตรรวดเร็วทันใจ"}
-            </p>
-          </div>
-          {isReadingCard ? (
-            <div className="flex gap-1.5 px-4">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "300ms" }} />
-            </div>
-          ) : (
-            <div className="bg-white border border-blue-100 text-blue-700 font-bold px-4 py-2 rounded-xl text-xs shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              {formData.cardPhoto ? "อ่านใหม่" : "ทดสอบอ่านบัตร"}
-            </div>
-          )}
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 justify-between">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 content-start">
-          {/* Full Name */}
-          <div>
-            <label className={LABEL_CLASS}>ชื่อ-นามสกุล <span className="text-red-400 normal-case tracking-normal font-bold">*</span></label>
-            <div className="relative">
-              <div className={ICON_CLASS}><User size={18} /></div>
-              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required placeholder="เช่น นายสมชาย ใจดี" className={FIELD_CLASS} />
-            </div>
-          </div>
-
-          {/* ID Card */}
-          <div>
-            <label className={LABEL_CLASS}>หมายเลขบัตรประชาชน <span className="text-red-400 normal-case tracking-normal font-bold">*</span></label>
-            <div className="relative">
-              <div className={ICON_CLASS}><CreditCard size={18} /></div>
-              <input type="text" name="idCardNumber" value={formData.idCardNumber} onChange={handleChange} required placeholder="X-XXXX-XXXXX-XX-X" maxLength={13} className={FIELD_CLASS} />
-            </div>
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className={LABEL_CLASS}>เบอร์โทรศัพท์ <span className="text-red-400 normal-case tracking-normal font-bold">*</span></label>
-            <div className="relative">
-              <div className={ICON_CLASS}><Phone size={18} /></div>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="08X-XXX-XXXX" className={FIELD_CLASS} />
-            </div>
-          </div>
-
-          {/* Host */}
-          <div>
-            <label className={LABEL_CLASS}>บุคคล / แผนกที่เข้าพบ <span className="text-red-400 normal-case tracking-normal font-bold">*</span></label>
-            <div className="relative">
-              <div className={ICON_CLASS}><UserCheck size={18} /></div>
-              <input type="text" name="hostName" value={formData.hostName} onChange={handleChange} required placeholder="ชื่อพนักงาน หรือ ฝ่ายที่ติดต่อ" className={FIELD_CLASS} />
-            </div>
-          </div>
-
-          {/* Purpose */}
-          <div>
-            <label className={LABEL_CLASS}>จุดประสงค์ <span className="text-red-400 normal-case tracking-normal font-bold">*</span></label>
-            <div className="relative">
-              <div className={ICON_CLASS}><FileText size={18} /></div>
-              <select name="purpose" value={formData.purpose} onChange={handleChange} required className={FIELD_CLASS + " appearance-none cursor-pointer"}>
-                <option value="" disabled>-- เลือกจุดประสงค์ --</option>
-                <option value="ประชุม">ประชุม / สัมมนา</option>
-                <option value="ติดต่องาน">ติดต่องาน / ส่งเอกสาร</option>
-                <option value="สัมภาษณ์งาน">สัมภาษณ์งาน</option>
-                <option value="ซ่อมบำรุง">ซ่อมบำรุง (Vendor)</option>
-                <option value="อื่นๆ">อื่นๆ</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div>
-            <label className={LABEL_CLASS}>ระยะเวลาที่คาดว่าจะอยู่ <span className="text-red-400 normal-case tracking-normal font-bold">*</span></label>
-            <div className="relative">
-              <div className={ICON_CLASS}><Clock size={18} /></div>
-              <select name="duration" value={formData.duration} onChange={handleChange} className={FIELD_CLASS + " appearance-none cursor-pointer"}>
-                <option value="1">1 ชั่วโมง</option>
-                <option value="2">2 ชั่วโมง</option>
-                <option value="4">ครึ่งวัน (4 ชั่วโมง)</option>
-                <option value="8">เต็มวัน</option>
-              </select>
-            </div>
-          </div>
+      <div className="flex-shrink-0 mb-5 flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">ลงทะเบียนผู้มาติดต่อ</h1>
+          <p className="text-zinc-500 text-sm mt-1">
+            {hasCardData ? "กรุณาตรวจสอบข้อมูลและระบุจุดประสงค์ (ถ้ามี)" : "กรุณาเสียบบัตรประชาชนเพื่อเริ่มลงทะเบียน"}
+          </p>
         </div>
+        {hasCardData && (
+          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+            <UserCheck size={16} />
+            <span className="text-xs font-bold uppercase tracking-wider">อ่านบัตรสำเร็จ</span>
+          </div>
+        )}
+      </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between gap-4 pt-5 border-t border-zinc-100 mt-4">
-          <p className="text-xs text-zinc-400"><span className="text-red-400">*</span> จำเป็นต้องกรอก</p>
-          <button
-            type="submit"
-            className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 px-8 rounded-2xl font-bold text-base shadow-xl shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200 active:scale-[0.98]">
-            ถ่ายรูปใบหน้า
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
+      {!hasCardData ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-zinc-50/50 border-2 border-dashed border-zinc-200 rounded-3xl p-12 text-center animate-pulse duration-[3000ms]">
+          <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
+            <Scan size={48} className="animate-pulse" />
+          </div>
+          <h2 className="text-xl font-bold text-zinc-800 mb-2">กรุณาเสียบบัตรประชาชน</h2>
+          <p className="text-zinc-500 text-sm max-w-[280px]">
+            ระบบกำลังรอการอ่านข้อมูลจากบัตรประชาชนของท่าน กรุณาเสียบบัตรเข้ากับเครื่องอ่าน
+          </p>
+          <div className="mt-8 flex gap-2">
+             <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+             <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "200ms" }} />
+             <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "400ms" }} />
+          </div>
+          <button 
+            type="button"
+            onClick={onSimulateReadCard}
+            className="mt-8 text-xs text-blue-600 font-medium hover:underline opacity-50"
+          >
+            (กดที่นี่เพื่อทดสอบกรณีไม่มีบัตรจริง)
           </button>
         </div>
-      </form>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
+            {/* Photo Section */}
+            <div className="md:col-span-4 lg:col-span-3">
+              <label className={LABEL_CLASS}>รูปถ่ายหน้าบัตร</label>
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden border-2 border-zinc-100 bg-zinc-50 shadow-inner relative group">
+                {formData.cardPhoto ? (
+                  <img 
+                    src={`data:image/jpeg;base64,${formData.cardPhoto}`} 
+                    alt="ID Photo" 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                    <User size={64} />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+
+            {/* Information Section */}
+            <div className="md:col-span-8 lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+               {/* Title */}
+               <div className="md:col-span-2 lg:col-span-1">
+                <label className={LABEL_CLASS}>คำนำหน้า <span className="text-red-400 font-bold">*</span></label>
+                <div className="relative">
+                  <div className={ICON_CLASS}><User size={18} /></div>
+                  <input type="text" name="title" value={formData.title} onChange={handleChange} required placeholder="นาย / นาง / นางสาว" className={FIELD_CLASS} />
+                </div>
+              </div>
+
+              <div className="hidden lg:block"></div>
+
+              {/* First Name */}
+              <div>
+                <label className={LABEL_CLASS}>ชื่อ <span className="text-red-400 font-bold">*</span></label>
+                <div className="relative">
+                  <div className={ICON_CLASS}><User size={18} /></div>
+                  <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required placeholder="ระบุชื่อภาษาไทย" className={FIELD_CLASS} />
+                </div>
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label className={LABEL_CLASS}>นามสกุล <span className="text-red-400 font-bold">*</span></label>
+                <div className="relative">
+                  <div className={ICON_CLASS}><User size={18} /></div>
+                  <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required placeholder="ระบุนามสกุลภาษาไทย" className={FIELD_CLASS} />
+                </div>
+              </div>
+
+              {/* ID Number */}
+              <div className="md:col-span-2">
+                <label className={LABEL_CLASS}>เลขบัตรประชาชน <span className="text-red-400 font-bold">*</span></label>
+                <div className="relative">
+                  <div className={ICON_CLASS}><CreditCard size={18} /></div>
+                  <input type="text" name="idCardNumber" value={formData.idCardNumber} onChange={handleChange} required placeholder="X-XXXX-XXXXX-XX-X" maxLength={13} className={FIELD_CLASS} />
+                </div>
+              </div>
+
+              {/* Purpose */}
+              <div className="md:col-span-2">
+                <label className={LABEL_CLASS}>จุดประสงค์ในการเข้าพบ <span className="text-zinc-400 font-normal tracking-normal">(เลือกได้)</span></label>
+                <div className="relative">
+                  <div className={ICON_CLASS}><FileText size={18} /></div>
+                  <select name="purpose" value={formData.purpose} onChange={handleChange} className={FIELD_CLASS + " appearance-none cursor-pointer"}>
+                    <option value="">-- เลือกจุดประสงค์ --</option>
+                    <option value="ประชุม">ประชุม / สัมมนา</option>
+                    <option value="ติดต่องาน">ติดต่องาน / ส่งเอกสาร</option>
+                    <option value="สัมภาษณ์งาน">สัมภาษณ์งาน</option>
+                    <option value="ซ่อมบำรุง">ซ่อมบำรุง (Vendor)</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-between gap-4 pt-5 border-t border-zinc-100 mt-auto">
+        <p className="text-xs text-zinc-400">
+          {hasCardData ? <><span className="text-red-400">*</span> ข้อมูลที่จำเป็นต้องมีเพื่อความปลอดภัย</> : "กรุณาเสียบบัตรประชาชนเพื่อดำเนินการต่อ"}
+        </p>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!hasCardData}
+          className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 px-8 rounded-2xl font-bold text-base shadow-xl shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+          ขั้นตอนถัดไป
+          <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
+        </button>
+      </div>
     </div>
   );
 }

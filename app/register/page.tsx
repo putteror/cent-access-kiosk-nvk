@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, XCircle } from "lucide-react";
+import { Shield, XCircle, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { fetchIdCardData } from "../../services/id-card.service";
 import { registerVisitor } from "../../services/registration.service";
 import { CubeIcon } from "@heroicons/react/24/solid"
@@ -12,6 +13,7 @@ import CameraCapture from "../components/CameraCapture";
 import SuccessScreen from "../components/SuccessScreen";
 
 export default function KioskRegistration() {
+  const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
   const [isReadingCard, setIsReadingCard] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,14 +21,50 @@ export default function KioskRegistration() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
+    title: "",
+    firstName: "",
+    lastName: "",
     fullName: "",
     idCardNumber: "",
-    phone: "",
-    hostName: "",
     purpose: "",
-    duration: "1",
     cardPhoto: "",
   });
+
+  // Polling for ID Card
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (step === 1 && !formData.idCardNumber) {
+      interval = setInterval(async () => {
+        if (isReadingCard) return;
+        
+        try {
+          setIsReadingCard(true);
+          const data = await fetchIdCardData();
+          if (data && data.idCardNumber) {
+            setFormData((prev) => ({
+              ...prev,
+              title: data.title || "",
+              firstName: data.firstName || "",
+              lastName: data.lastName || "",
+              fullName: data.fullName,
+              idCardNumber: data.idCardNumber,
+              cardPhoto: data.photo || "",
+            }));
+            // หยุดอ่านเมื่อได้ข้อมูลแล้ว หรืออาจจะปล่อยให้โชว์ "อ่านสำเร็จ"
+          }
+        } catch (error) {
+          // Ignore error during polling (no card inserted)
+        } finally {
+          setIsReadingCard(false);
+        }
+      }, 3000); // Polling every 3 seconds
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, formData.idCardNumber, isReadingCard]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -41,12 +79,16 @@ export default function KioskRegistration() {
       const data = await fetchIdCardData();
       setFormData((prev) => ({
         ...prev,
+        title: data.title || "",
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
         fullName: data.fullName,
         idCardNumber: data.idCardNumber,
         cardPhoto: data.photo || "",
       }));
     } catch (error) {
       console.error("Failed to read ID card", error);
+      // For testing, if it fails, set mock data (optional, but requested to retry)
     } finally {
       setIsReadingCard(false);
     }
@@ -56,14 +98,20 @@ export default function KioskRegistration() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const response = await registerVisitor({ ...formData, photoBase64 });
+      // Mapping back to what backend expects if needed
+      const payload = {
+        fullName: formData.fullName || `${formData.title}${formData.firstName} ${formData.lastName}`,
+        idCardNumber: formData.idCardNumber,
+        purpose: formData.purpose,
+        photoBase64,
+        cardPhoto: formData.cardPhoto,
+      };
+      const response = await registerVisitor(payload);
       if (response.success) {
         setIsSubmitting(false);
         setSubmitted(true);
         setTimeout(() => {
-          setSubmitted(false);
-          setStep(1);
-          setFormData({ fullName: "", idCardNumber: "", phone: "", hostName: "", purpose: "", duration: "1", cardPhoto: "" });
+          router.push("/");
         }, 5000);
       } else {
         setIsSubmitting(false);
@@ -72,7 +120,7 @@ export default function KioskRegistration() {
     } catch (error: any) {
       console.error("Error registering:", error);
       setIsSubmitting(false);
-      setSubmitError(error.message || "เไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+      setSubmitError(error.message || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
     }
   };
 
@@ -112,13 +160,25 @@ export default function KioskRegistration() {
       <div className="relative w-full max-w-4xl mx-4 lg:mx-8 h-full max-h-[900px] flex flex-col bg-white/70 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-blue-900/10 border border-white/80 overflow-hidden">
         {/* Top Brand Bar */}
         <div className="flex-shrink-0 flex items-center justify-between px-8 py-4 bg-white/60 border-b border-zinc-100/80">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-700/30">
-              <CubeIcon className="text-white h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-bold text-zinc-800 text-sm leading-none tracking-tight">CENT ACCESS</p>
-              <p className="text-[11px] text-zinc-400 mt-0.5">Visitor Management System</p>
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center gap-2 text-zinc-400 hover:text-zinc-800 transition-colors group"
+            >
+              <div className="w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center group-hover:bg-zinc-100 transition-colors">
+                <ArrowLeft size={16} />
+              </div>
+              <span className="text-xs font-semibold">กลับหน้าหลัก</span>
+            </button>
+            <div className="w-px h-8 bg-zinc-200" />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-700/30">
+                <CubeIcon className="text-white h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-bold text-zinc-800 text-sm leading-none tracking-tight">CENT ACCESS</p>
+                <p className="text-[11px] text-zinc-400 mt-0.5">Visitor Management System</p>
+              </div>
             </div>
           </div>
 

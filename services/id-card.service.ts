@@ -1,4 +1,7 @@
 export interface IdCardData {
+  title?: string;
+  firstName?: string;
+  lastName?: string;
   fullName: string;
   fullNameEn?: string;
   idCardNumber: string;
@@ -37,6 +40,9 @@ export const fetchIdCardData = async (): Promise<IdCardData> => {
 
     // Mapping ข้อมูลจากรูปแบบใหม่
     return {
+      title: data.TitleTH,
+      firstName: data.FirstNameTH,
+      lastName: data.LastNameTH,
       fullName: data.FullNameTH || "ไม่พบชื่อภาษาไทย",
       fullNameEn: data.FullNameEN,
       idCardNumber: data.CitizenID || "ไม่พบหมายเลขบัตร",
@@ -48,15 +54,7 @@ export const fetchIdCardData = async (): Promise<IdCardData> => {
     console.error("[ID Card Error] fetchIdCardData failed:", error);
     
     // 💡 การจำลอง (Mock) เมื่อเชื่อมต่อไม่ได้หรือกำลังพัฒนา
-    console.warn("⚠️ Using mocked ID card data due to connection failure.");
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    return {
-      fullName: "นาย สมชาย เยี่ยมยอด",
-      fullNameEn: "Mr. Somchai Yeamyod",
-      idCardNumber: "1234567890123",
-      birthDate: "25330101",
-      gender: "1",
-      photo: ""
-    };
+    // ในสภาวะปกติจะ throw error เพื่อให้ caller รู้ว่าไม่อ่านไม่ได้
+    throw error;
   }
 };
