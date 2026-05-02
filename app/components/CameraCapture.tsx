@@ -12,7 +12,7 @@ interface CameraCaptureProps {
 
 export default function CameraCapture({ onBack, onConfirm, isSubmitting }: CameraCaptureProps) {
   const webcamRef = useRef<Webcam>(null);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(true);
   const [photoSrc, setPhotoSrc] = useState<string | null>(null);
 
   const capturePhoto = useCallback(() => {
@@ -41,26 +41,7 @@ export default function CameraCapture({ onBack, onConfirm, isSubmitting }: Camer
       </div>
 
       <div className="flex-1 relative rounded-3xl overflow-hidden bg-zinc-900 shadow-inner min-h-0">
-        {!isCameraOpen && !photoSrc && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 gap-6">
-            <div className="relative">
-              <div className="w-32 h-32 border-4 border-dashed border-zinc-600 rounded-full flex items-center justify-center">
-                <Camera size={44} className="text-zinc-500" />
-              </div>
-            </div>
-            <div className="text-center">
-              <p className="text-zinc-400 text-sm mb-4">กดปุ่มเพื่อเปิดกล้องและอนุญาตสิทธิ์การเข้าถึง</p>
-              <button
-                onClick={() => setIsCameraOpen(true)}
-                className="bg-white text-zinc-900 py-3 px-10 rounded-2xl font-bold text-base hover:bg-zinc-100 transition-all shadow-xl"
-              >
-                เปิดกล้อง
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isCameraOpen && !photoSrc && (
+        {!photoSrc ? (
           <>
             <Webcam
               audio={false}
@@ -96,9 +77,7 @@ export default function CameraCapture({ onBack, onConfirm, isSubmitting }: Camer
               </p>
             </div>
           </>
-        )}
-
-        {photoSrc && (
+        ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
             <img src={photoSrc} alt="Captured" className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl" />
             <div className="absolute bottom-4 inset-x-0 text-center">
@@ -112,7 +91,7 @@ export default function CameraCapture({ onBack, onConfirm, isSubmitting }: Camer
 
       {/* Camera Controls */}
       <div className="flex-shrink-0 pt-5 flex items-center justify-center gap-4">
-        {isCameraOpen && !photoSrc && (
+        {!photoSrc && (
           <button
             onClick={capturePhoto}
             className="group flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 px-10 rounded-2xl font-bold text-base shadow-xl shadow-blue-600/25 transition-all duration-200 active:scale-[0.98]"

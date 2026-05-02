@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { Shield, XCircle, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { fetchIdCardData } from "../../services/id-card.service";
 import { registerVisitor } from "../../services/registration.service";
 import { CubeIcon } from "@heroicons/react/24/solid"
@@ -13,9 +14,22 @@ import CameraCapture from "../components/CameraCapture";
 import SuccessScreen from "../components/SuccessScreen";
 
 export default function KioskRegistration() {
+  return (
+    <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-zinc-50">กำลังโหลด...</div>}>
+      <RegistrationContent />
+    </Suspense>
+  );
+}
+
+function RegistrationContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
+  
+  const [isManualMode, setIsManualMode] = useState(mode === "manual");
   const [step, setStep] = useState<1 | 2>(1);
   const [isReadingCard, setIsReadingCard] = useState(false);
+  const [readSuccess, setReadSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -26,6 +40,7 @@ export default function KioskRegistration() {
     lastName: "",
     fullName: "",
     idCardNumber: "",
+    phone: "",
     purpose: "",
     cardPhoto: "",
   });
@@ -37,7 +52,7 @@ export default function KioskRegistration() {
     if (step === 1 && !formData.idCardNumber) {
       interval = setInterval(async () => {
         if (isReadingCard) return;
-        
+
         try {
           setIsReadingCard(true);
           const data = await fetchIdCardData();
@@ -51,6 +66,7 @@ export default function KioskRegistration() {
               idCardNumber: data.idCardNumber,
               cardPhoto: data.photo || "",
             }));
+            setReadSuccess(true);
             // หยุดอ่านเมื่อได้ข้อมูลแล้ว หรืออาจจะปล่อยให้โชว์ "อ่านสำเร็จ"
           }
         } catch (error) {
@@ -77,18 +93,23 @@ export default function KioskRegistration() {
     setIsReadingCard(true);
     try {
       const data = await fetchIdCardData();
-      setFormData((prev) => ({
-        ...prev,
-        title: data.title || "",
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        fullName: data.fullName,
-        idCardNumber: data.idCardNumber,
-        cardPhoto: data.photo || "",
-      }));
+      if (data) {
+        setFormData((prev) => ({
+          ...prev,
+          title: data.title || "",
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          fullName: data.fullName,
+          idCardNumber: data.idCardNumber,
+          cardPhoto: data.photo || "",
+        }));
+        setReadSuccess(true);
+      } else {
+        // หาก return null ให้แจ้งเตือน หรืออาจจะไม่ทำอะไรก็ได้ เพราะจริงๆ แล้วเครื่องอาจจะแค่ยังไม่อ่าน
+        // console.warn("No card data found.");
+      }
     } catch (error) {
-      console.error("Failed to read ID card", error);
-      // For testing, if it fails, set mock data (optional, but requested to retry)
+      console.error("Unexpected error during card read:", error);
     } finally {
       setIsReadingCard(false);
     }
@@ -102,6 +123,7 @@ export default function KioskRegistration() {
       const payload = {
         fullName: formData.fullName || `${formData.title}${formData.firstName} ${formData.lastName}`,
         idCardNumber: formData.idCardNumber,
+        phone: formData.phone,
         purpose: formData.purpose,
         photoBase64,
         cardPhoto: formData.cardPhoto,
@@ -130,7 +152,7 @@ export default function KioskRegistration() {
 
   return (
     <div
-      className="h-screen w-screen flex items-center justify-center overflow-hidden relative"
+      className="h-screen w-screen flex items-center justify-center overflow-hidden relative p-4 md:p-8"
       style={{ background: "linear-gradient(140deg, #f0f4ff 0%, #f8faff 50%, #f0f3fb 100%)" }}
     >
       {/* Error Popup */}
@@ -157,7 +179,7 @@ export default function KioskRegistration() {
       <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-indigo-100/40 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Card */}
-      <div className="relative w-full max-w-4xl mx-4 lg:mx-8 h-full max-h-[900px] flex flex-col bg-white/70 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-blue-900/10 border border-white/80 overflow-hidden">
+      <div className="relative w-full h-full flex flex-col bg-white/70 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-blue-900/10 border border-white/80 overflow-hidden">
         {/* Top Brand Bar */}
         <div className="flex-shrink-0 flex items-center justify-between px-8 py-4 bg-white/60 border-b border-zinc-100/80">
           <div className="flex items-center gap-6">
@@ -171,14 +193,15 @@ export default function KioskRegistration() {
               <span className="text-xs font-semibold">กลับหน้าหลัก</span>
             </button>
             <div className="w-px h-8 bg-zinc-200" />
-            <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-3">
               <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-700/30">
                 <CubeIcon className="text-white h-5 w-5 text-blue-600" />
               </div>
-              <div>
+              <div className='hidden sm:flex flex-col'>
                 <p className="font-bold text-zinc-800 text-sm leading-none tracking-tight">CENT ACCESS</p>
                 <p className="text-[11px] text-zinc-400 mt-0.5">Visitor Management System</p>
               </div>
+
             </div>
           </div>
 
@@ -210,6 +233,9 @@ export default function KioskRegistration() {
             onNext={() => setStep(2)}
             onSimulateReadCard={handleSimulateReadCard}
             isReadingCard={isReadingCard}
+            readSuccess={readSuccess}
+            isManualMode={isManualMode}
+            onSwitchToManual={() => setIsManualMode(true)}
           />
         )}
         {step === 2 && (

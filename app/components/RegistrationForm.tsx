@@ -16,6 +16,9 @@ interface RegistrationFormProps {
   onNext: () => void;
   onSimulateReadCard: () => void;
   isReadingCard: boolean;
+  readSuccess?: boolean;
+  isManualMode?: boolean;
+  onSwitchToManual?: () => void;
 }
 
 export default function RegistrationForm({
@@ -24,6 +27,9 @@ export default function RegistrationForm({
   onNext,
   onSimulateReadCard,
   isReadingCard,
+  readSuccess = false,
+  isManualMode = false,
+  onSwitchToManual,
 }: RegistrationFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,17 +37,22 @@ export default function RegistrationForm({
   };
 
   const hasCardData = !!formData.idCardNumber;
+  const isFormValid = !!(formData.title && formData.firstName && formData.lastName && formData.idCardNumber);
 
   return (
-    <div className="flex-1 flex flex-col px-8 lg:px-12 pt-7 pb-6 min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col px-8 lg:px-12 pt-7 pb-6 overflow-hidden">
       <div className="flex-shrink-0 mb-5 flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">ลงทะเบียนผู้มาติดต่อ</h1>
           <p className="text-zinc-500 text-sm mt-1">
-            {hasCardData ? "กรุณาตรวจสอบข้อมูลและระบุจุดประสงค์ (ถ้ามี)" : "กรุณาเสียบบัตรประชาชนเพื่อเริ่มลงทะเบียน"}
+            {readSuccess
+              ? "กรุณาตรวจสอบข้อมูลและระบุจุดประสงค์ (ถ้ามี)"
+              : isManualMode
+                ? "กรุณากรอกข้อมูลส่วนตัวของท่านเพื่อลงทะเบียน"
+                : "กรุณาเสียบบัตรประชาชนเพื่อเริ่มลงทะเบียน"}
           </p>
         </div>
-        {hasCardData && (
+        {readSuccess && (
           <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
             <UserCheck size={16} />
             <span className="text-xs font-bold uppercase tracking-wider">อ่านบัตรสำเร็จ</span>
@@ -49,54 +60,69 @@ export default function RegistrationForm({
         )}
       </div>
 
-      {!hasCardData ? (
-        <div className="flex-1 flex flex-col items-center justify-center bg-zinc-50/50 border-2 border-dashed border-zinc-200 rounded-3xl p-12 text-center animate-pulse duration-[3000ms]">
-          <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
-            <Scan size={48} className="animate-pulse" />
+      {(!hasCardData && !isManualMode) ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-zinc-50/50 border-2 border-dashed border-zinc-200 rounded-3xl p-12 text-center">
+          <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-inner animate-pulse">
+            <Scan size={48} />
           </div>
           <h2 className="text-xl font-bold text-zinc-800 mb-2">กรุณาเสียบบัตรประชาชน</h2>
-          <p className="text-zinc-500 text-sm max-w-[280px]">
+          <p className="text-zinc-500 text-sm max-w-[280px] mb-8">
             ระบบกำลังรอการอ่านข้อมูลจากบัตรประชาชนของท่าน กรุณาเสียบบัตรเข้ากับเครื่องอ่าน
           </p>
-          <div className="mt-8 flex gap-2">
-             <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-             <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "200ms" }} />
-             <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "400ms" }} />
+
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex gap-2 mb-4">
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "200ms" }} />
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "400ms" }} />
+            </div>
+
+            <button
+              type="button"
+              onClick={onSwitchToManual}
+              className="px-8 py-3 bg-white border border-zinc-200 text-zinc-700 font-bold rounded-2xl shadow-sm hover:bg-zinc-50 transition-all active:scale-[0.98] flex items-center gap-2"
+            >
+              <FileText size={18} className="text-zinc-400" />
+              ลงทะเบียนด้วยตนเอง
+            </button>
+
+            <button
+              type="button"
+              onClick={onSimulateReadCard}
+              className="mt-4 text-xs text-blue-600 font-medium hover:underline opacity-50"
+            >
+              (กดที่นี่เพื่อทดสอบกรณีไม่มีบัตรจริง)
+            </button>
           </div>
-          <button 
-            type="button"
-            onClick={onSimulateReadCard}
-            className="mt-8 text-xs text-blue-600 font-medium hover:underline opacity-50"
-          >
-            (กดที่นี่เพื่อทดสอบกรณีไม่มีบัตรจริง)
-          </button>
         </div>
       ) : (
         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
-            {/* Photo Section */}
-            <div className="md:col-span-3 lg:col-span-2">
-              <label className={LABEL_CLASS}>รูปถ่ายหน้าบัตร</label>
-              <div className="aspect-[3/4] w-full max-w-[140px] mx-auto md:mx-0 rounded-2xl overflow-hidden border-2 border-zinc-100 bg-zinc-50 shadow-inner relative group">
-                {formData.cardPhoto ? (
-                  <img 
-                    src={`data:image/jpeg;base64,${formData.cardPhoto}`} 
-                    alt="ID Photo" 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                    <User size={48} />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            {/* Photo Section: แสดงเฉพาะเมื่ออ่านบัตรสำเร็จเท่านั้น */}
+            {readSuccess && (
+              <div className="md:col-span-3 lg:col-span-2">
+                <label className={LABEL_CLASS}>รูปถ่ายหน้าบัตร</label>
+                <div className="aspect-[3/4] w-full max-w-[140px] mx-auto md:mx-0 rounded-2xl overflow-hidden border-2 border-zinc-100 bg-zinc-50 shadow-inner relative group">
+                  {formData.cardPhoto ? (
+                    <img
+                      src={`data:image/jpeg;base64,${formData.cardPhoto}`}
+                      alt="ID Photo"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                      <User size={48} />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Information Section */}
-            <div className="md:col-span-9 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-               {/* Title */}
-               <div className="md:col-span-2 lg:col-span-1">
+            <div className={`${readSuccess ? "md:col-span-9 lg:col-span-10" : "md:col-span-12 lg:col-span-12"} grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4`}>
+              {/* Title */}
+              <div className="md:col-span-2 lg:col-span-1">
                 <label className={LABEL_CLASS}>คำนำหน้า <span className="text-red-400 font-bold">*</span></label>
                 <div className="relative">
                   <div className={ICON_CLASS}><User size={18} /></div>
@@ -134,7 +160,7 @@ export default function RegistrationForm({
               </div>
 
               {/* Purpose */}
-              <div className="md:col-span-2">
+              <div>
                 <label className={LABEL_CLASS}>จุดประสงค์ในการเข้าพบ <span className="text-zinc-400 font-normal tracking-normal">(เลือกได้)</span></label>
                 <div className="relative">
                   <div className={ICON_CLASS}><FileText size={18} /></div>
@@ -148,6 +174,15 @@ export default function RegistrationForm({
                   </select>
                 </div>
               </div>
+
+              {/* Phone */}
+              <div>
+                <label className={LABEL_CLASS}>เบอร์โทรศัพท์ <span className="text-zinc-400 font-normal tracking-normal">(ถ้ามี)</span></label>
+                <div className="relative">
+                  <div className={ICON_CLASS}><Phone size={18} /></div>
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="08X-XXX-XXXX" className={FIELD_CLASS} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -156,12 +191,16 @@ export default function RegistrationForm({
       {/* Actions */}
       <div className="flex items-center justify-between gap-4 pt-5 border-t border-zinc-100 mt-auto">
         <p className="text-xs text-zinc-400">
-          {hasCardData ? <><span className="text-red-400">*</span> ข้อมูลที่จำเป็นต้องมีเพื่อความปลอดภัย</> : "กรุณาเสียบบัตรประชาชนเพื่อดำเนินการต่อ"}
+          {readSuccess
+            ? <><span className="text-red-400">*</span> ข้อมูลที่ดึงมาจากบัตรประชาชนเพื่อความปลอดภัย</>
+            : isManualMode
+              ? "กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบถ้วน"
+              : "กรุณาเสียบบัตรประชาชนเพื่อดำเนินการต่อ"}
         </p>
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!hasCardData}
+          disabled={!isFormValid}
           className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 px-8 rounded-2xl font-bold text-base shadow-xl shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
           ขั้นตอนถัดไป
           <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
