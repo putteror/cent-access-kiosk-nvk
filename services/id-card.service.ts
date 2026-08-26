@@ -11,7 +11,7 @@ export interface IdCardData {
 }
 
 // 📌 API Endpoint สำหรับเครื่องอ่านบัตรประชาชนตัวเครื่อง
-const ID_CARD_API_URL = process.env.NEXT_PUBLIC_IDCARD_API_URL || 'http://localhost:8080/api/smartcard/read';
+const ID_CARD_API_URL = process.env.NEXT_PUBLIC_IDCARD_API_URL || 'http://localhost:1300/api/smartcard/read';
 
 /**
  * ฟังก์ชันดึงข้อมูลจากการอ่านบัตรประชาชนผ่าน Local Service
