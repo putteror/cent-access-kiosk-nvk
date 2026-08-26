@@ -127,9 +127,11 @@ function RegistrationContent() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      // Mapping back to what backend expects if needed
       const payload = {
-        fullName: formData.fullName || `${formData.title}${formData.firstName} ${formData.lastName}`,
+        title: formData.title,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        fullName: formData.fullName || `${formData.title || ""}${formData.firstName || ""} ${formData.lastName || ""}`.trim(),
         idCardNumber: formData.idCardNumber,
         phone: formData.phone,
         purpose: formData.purpose,

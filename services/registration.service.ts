@@ -2,9 +2,15 @@ import hmacSHA256 from 'crypto-js/hmac-sha256';
 import Hex from 'crypto-js/enc-hex';
 
 export interface RegistrationPayload {
+  title?: string;
+  firstName?: string;
+  lastName?: string;
   fullName: string;
   idCardNumber: string;
   phone?: string;
+  email?: string;
+  company?: string;
+  gender?: string;
   hostName?: string;
   purpose?: string;
   duration?: string;
@@ -19,74 +25,81 @@ export interface RegistrationResponse {
   data?: any;
 }
 
-// 📌 กำหนด API Endpoint สำหรับ Public Registrants (แบบเดียวกับ registrantService ของ ACM)
-const PUBLIC_API_ENDPOINT = '/api/public/registrants/';
-const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY || "cent-access-secret-key-public-api"; // ควรใช้จาก env
+// 📌 กำหนด API Endpoint สำหรับ Public Visits Upsert
+const PUBLIC_VISITS_UPSERT_ENDPOINT = '/api/visitor/public/visits/upsert';
+const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY || "cent-access-secret-key-public-api";
 
 /**
- * ฟังก์ชันสร้าง Header แบบเข้ารหัสเพื่อความปลอดภัยในการคุยกับ Public API
- * (ถอดแบบมาจาก requestAPI.ts ใน ACM Frontend)
+ * ฟังก์ชันสร้าง Header แบบเข้ารหัสเพื่อความปลอดภัยในการคุยกับ Public API ของ Tenant
+ * ตามสเปก:
+ * x-tenant-id: <TENANT_ID>
+ * x-timestamp: <UNIX_TIMESTAMP>
+ * x-signature: <HMAC_SHA256_HEX(tenantId:<TENANT_ID>;<TIMESTAMP>;)>
  */
-const generatePublicHeadersFormSiteId = (siteId: string) => {
+const generatePublicHeadersForTenant = (tenantId: string) => {
   const timestamp = Math.floor(Date.now() / 1000).toString();
-  const message = `siteId:${siteId};${timestamp};`;
+  const message = `tenantId:${tenantId};${timestamp};`;
   const signature = hmacSHA256(message, SECRET_KEY).toString(Hex);
   return {
     'Content-Type': 'application/json',
-    'X-Site-ID': siteId,
-    'X-Timestamp': timestamp,
-    'X-Signature': signature
+    'x-tenant-id': tenantId,
+    'x-timestamp': timestamp,
+    'x-signature': signature
   };
 };
 
 /**
- * ฟังก์ชันสำหรับการลงทะเบียน Visitor โดยเรียกไปยัง API Backend
+ * ฟังก์ชันสำหรับการลงทะเบียน Visitor โดยเรียกไปยัง API Backend (Visits Upsert)
  */
 export const registerVisitor = async (payload: RegistrationPayload): Promise<RegistrationResponse> => {
-  // ดึงค่า URL หลัก และ Site ID จากตัวแปร Environment
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-  const siteId = process.env.NEXT_PUBLIC_SITE_ID || '';
-  const formId = process.env.NEXT_PUBLIC_FORM_ID || '';
+  // รองรับทั้ง NEXT_PUBLIC_TENANT_ID และ NEXT_PUBLIC_SITE_ID (fallback)
+  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || process.env.NEXT_PUBLIC_SITE_ID || '';
 
-  const apiPath = `${baseUrl}${PUBLIC_API_ENDPOINT}`;
+  const apiPath = `${baseUrl}${PUBLIC_VISITS_UPSERT_ENDPOINT}`;
 
-  console.log(`[API] Submitting Registration to ${apiPath}...`);
+  console.log(`[API] Submitting Visits Upsert to ${apiPath}...`);
 
   try {
-    // แยกชื่อและนามสกุลออกจาก fullName เพื่อให้สอดคล้องกับมาตรฐานของ Registrant
-    const nameParts = payload.fullName.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // แยกชื่อและนามสกุลออกจาก fullName หรือ fallback
+    const nameParts = payload.fullName.trim().split(/\s+/);
+    const firstName = payload.firstName || nameParts[0] || '';
+    const lastName = payload.lastName || nameParts.slice(1).join(' ') || '';
 
-    // จัดเตรียมข้อมูลให้อยู่ในโครงสร้าง RegistrantRequestsData และ RegistrantAnswerRequest[]
-    // เพื่อให้เข้ากันได้กับ Backend Endpoint ที่รอรับ answers array
+    const now = new Date();
+    const startAt = now.toISOString();
+    // ค่า default สิ้นสุดวันเดียวกัน หรือตามเวลาที่กำหนด (เช่น 1 วัน หรือ 9 ชม.)
+    const endAt = new Date(now.getTime() + 8 * 60 * 60 * 1000).toISOString();
+
+    // จัดเตรียม Payload ตาม docs /api/visitor/public/visits/upsert
     const requestData = {
-      registerFormId: formId,
-      answers: [
-        { inputType: "TEXT", key: "FIRST_NAME", label: "First Name", answer: firstName },
-        { inputType: "TEXT", key: "LAST_NAME", label: "Last Name", answer: lastName },
-        { inputType: "TEXT", key: "PERSON_CODE", label: "ID Card Number", answer: payload.idCardNumber },
-        { inputType: "TEXT", key: "MOBILE_NUMBER", label: "Phone Number", answer: payload.phone || "-" },
-        { inputType: "TEXT", key: "CONTACT_PERSON", label: "Contact Person", answer: payload.hostName || "-" },
-        { inputType: "TEXT", key: "VISIT_PURPOSE", label: "Visit Purpose", answer: payload.purpose || "-" },
-        { inputType: "TEXT", key: "DURATION", label: "Duration", answer: payload.duration || "1" },
-        ...(payload.photoBase64 ? [{
-          inputType: "IMAGE",
-          key: "FACE_IMAGE",
-          label: "Face Image",
-          answer: payload.photoBase64,
-        }] : []),
-        ...(payload.cardPhoto ? [{
-          inputType: "IMAGE",
-          key: "CARD_IMAGE",
-          label: "ID Card Photo",
-          answer: payload.cardPhoto,
-        }] : [])
-      ],
-      status: "PENDING" // หรือสถานะที่ Backend คาดหวัง
+      title: payload.purpose ? `ติดต่อเรื่อง: ${payload.purpose}` : "ลงทะเบียนผู้มาติดต่อ (Kiosk)",
+      description: payload.purpose || "ติดต่อประสานงาน",
+      startAt: startAt,
+      endAt: endAt,
+      status: "PENDING",
+      visitType: "General",
+      purposes: payload.purpose ? [payload.purpose] : ["ติดต่อประสานงาน"],
+      contactPersons: payload.hostName ? [payload.hostName] : [],
+      visitors: [
+        {
+          isPrimary: true,
+          visitor: {
+            title: payload.title || "",
+            firstName: firstName,
+            lastName: lastName,
+            personCode: payload.idCardNumber,
+            mobileNumber: payload.phone || "",
+            email: payload.email || "",
+            company: payload.company || "",
+            gender: payload.gender || "",
+            faceImagePath: payload.photoBase64 || payload.cardPhoto || ""
+          }
+        }
+      ]
     };
 
-    const headers = generatePublicHeadersFormSiteId(siteId);
+    const headers = generatePublicHeadersForTenant(tenantId);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -110,13 +123,12 @@ export const registerVisitor = async (payload: RegistrationPayload): Promise<Reg
     return {
       success: true,
       message: "ลงทะเบียนเรียบร้อยแล้ว",
-      visitId: responseData?.data?.id || `V${Date.now().toString().slice(-6)}`,
-      data: responseData?.data
+      visitId: responseData?.data?.id || responseData?.id || `V${Date.now().toString().slice(-6)}`,
+      data: responseData?.data || responseData
     };
   } catch (error: any) {
     console.error("[API Error] registerVisitor Failed:", error);
 
-    // Check if it's a timeout error
     const isTimeout = error.name === 'AbortError' || error.message.includes('abort');
 
     return {
