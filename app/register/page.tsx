@@ -11,6 +11,7 @@ import { CubeIcon } from "@heroicons/react/24/solid"
 // Components
 import RegistrationForm from "../components/RegistrationForm";
 import CameraCapture from "../components/CameraCapture";
+import FaceVerification from "../components/FaceVerification";
 import SuccessScreen from "../components/SuccessScreen";
 
 export default function KioskRegistration() {
@@ -27,9 +28,10 @@ function RegistrationContent() {
   const mode = searchParams.get("mode");
   
   const [isManualMode, setIsManualMode] = useState(mode === "manual");
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isReadingCard, setIsReadingCard] = useState(false);
   const [readSuccess, setReadSuccess] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -115,7 +117,13 @@ function RegistrationContent() {
     }
   };
 
-  const handleSubmitFinal = async (photoBase64: string) => {
+  // เมื่อถ่ายรูปเสร็จ ให้จำรูปไว้แล้วขยับไป Step 3 (เทียบใบหน้า)
+  const handlePhotoCaptured = (photoBase64: string) => {
+    setCapturedPhoto(photoBase64);
+    setStep(3);
+  };
+
+  const handleSubmitFinal = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -125,7 +133,7 @@ function RegistrationContent() {
         idCardNumber: formData.idCardNumber,
         phone: formData.phone,
         purpose: formData.purpose,
-        photoBase64,
+        photoBase64: capturedPhoto,
         cardPhoto: formData.cardPhoto,
       };
       const response = await registerVisitor(payload);
@@ -208,19 +216,40 @@ function RegistrationContent() {
           {/* Step indicator */}
           <div className="flex items-center gap-2">
             <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${step === 1 ? "bg-blue-600 text-white shadow-md shadow-blue-500/30" : "bg-zinc-100 text-zinc-400 line-through"
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                step === 1
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                  : step > 1
+                  ? "bg-zinc-100 text-zinc-400 line-through"
+                  : "bg-zinc-100 text-zinc-400"
+              }`}
             >
               <span className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center text-[10px] font-bold">1</span>
               ข้อมูลผู้ติดต่อ
             </div>
             <div className="w-6 h-px bg-zinc-300" />
             <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${step === 2 ? "bg-blue-600 text-white shadow-md shadow-blue-500/30" : "bg-zinc-100 text-zinc-400"
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                step === 2
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                  : step > 2
+                  ? "bg-zinc-100 text-zinc-400 line-through"
+                  : "bg-zinc-100 text-zinc-400"
+              }`}
             >
               <span className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center text-[10px] font-bold">2</span>
               ถ่ายภาพใบหน้า
+            </div>
+            <div className="w-6 h-px bg-zinc-300" />
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                step === 3
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                  : "bg-zinc-100 text-zinc-400"
+              }`}
+            >
+              <span className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center text-[10px] font-bold">3</span>
+              ตรวจสอบใบหน้า
             </div>
           </div>
         </div>
@@ -241,7 +270,17 @@ function RegistrationContent() {
         {step === 2 && (
           <CameraCapture
             onBack={() => setStep(1)}
+            onConfirm={handlePhotoCaptured}
+            isSubmitting={isSubmitting}
+          />
+        )}
+        {step === 3 && (
+          <FaceVerification
+            cameraPhoto={capturedPhoto}
+            cardPhoto={formData.cardPhoto}
+            onRetake={() => setStep(2)}
             onConfirm={handleSubmitFinal}
+            onCancel={() => router.push("/")}
             isSubmitting={isSubmitting}
           />
         )}
