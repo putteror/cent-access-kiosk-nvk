@@ -58,31 +58,33 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Buttons Section */}
-            <div className="flex flex-col gap-4 shrink-0 lg:w-1/2 justify-center">
+            {/* Registration Card Section */}
+            <div className="flex flex-col shrink-0 lg:w-1/2 min-h-0">
               <Link
                 href="/register?mode=id-card"
-                className="group relative flex items-center p-5 md:p-6 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl md:rounded-3xl transition-transform hover:-translate-y-1 shadow-lg shadow-blue-200"
+                className="group relative flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 text-white rounded-[2rem] transition-all hover:scale-[1.01] hover:shadow-2xl shadow-xl shadow-blue-500/20 h-full w-full text-center border border-white/20 overflow-hidden"
               >
-                <div className="bg-white/20 p-3 md:p-4 rounded-xl mr-4">
-                  <CreditCard className="w-6 h-6 md:w-8 md:h-8" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg md:text-xl font-bold">ลงทะเบียนผู้มาติดต่อ</span>
-                  <span className="text-blue-100 text-xs md:text-sm">ด้วยบัตรประชาชน/กรอกข้อมูล</span>
-                </div>
-              </Link>
+                {/* Background decorative shine */}
+                <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+                <div className="absolute -left-12 -top-12 w-48 h-48 bg-indigo-400/20 rounded-full blur-2xl pointer-events-none" />
 
-              <Link
-                href="/register?mode=manual"
-                className="group relative flex items-center p-5 md:p-6 bg-white text-slate-800 rounded-2xl md:rounded-3xl border border-slate-200 transition-transform hover:-translate-y-1 shadow-sm"
-              >
-                <div className="bg-slate-100 p-3 md:p-4 rounded-xl mr-4 group-hover:bg-slate-200">
-                  <UserPlus className="w-6 h-6 md:w-8 md:h-8 text-slate-600" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg md:text-xl font-bold">ตรวจสอบสถานะ</span>
-                  <span className="text-slate-500 text-xs md:text-sm">เช็คข้อมูลการลงทะเบียน</span>
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="bg-white/20 p-5 md:p-6 rounded-2xl mb-5 group-hover:scale-110 transition-transform shadow-inner border border-white/20">
+                    <CreditCard className="w-10 h-10 md:w-14 md:h-14 text-white" />
+                  </div>
+
+                  <span className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight drop-shadow-sm">
+                    ลงทะเบียนผู้มาติดต่อ
+                  </span>
+                  
+                  <p className="text-blue-100 text-sm md:text-base mt-2.5 max-w-[280px] font-medium leading-relaxed">
+                    เสียบบัตรประชาชน หรือกรอกข้อมูล เพื่อลงทะเบียนเข้าอาคาร
+                  </p>
+
+                  <div className="mt-8 px-7 py-3 bg-white text-blue-700 font-bold rounded-2xl text-sm md:text-base shadow-lg group-hover:bg-blue-50 group-hover:shadow-xl transition-all duration-200 flex items-center gap-2">
+                    <span>เริ่มต้นลงทะเบียน</span>
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
                 </div>
               </Link>
             </div>
